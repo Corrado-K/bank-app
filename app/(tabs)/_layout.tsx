@@ -1,35 +1,71 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
-
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { CustomTabBar } from "@/components/CustomTabBar"
+import { useThemeColors } from "@/hooks/useThemeColors"
+import Ionicons from "@expo/vector-icons/Ionicons"
+import { Tabs } from "expo-router"
+import React from "react"
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const colors = useThemeColors()
 
   return (
     <Tabs
+      tabBar={(props) => <CustomTabBar {...props} />}
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        headerStyle: { backgroundColor: colors.background },
+        headerTitleStyle: { fontFamily: "BricolageGrotesque_600SemiBold" },
+        headerTintColor: colors.foreground,
         headerShown: false,
-        tabBarButton: HapticTab,
-      }}>
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          title: "Home",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? "home" : "home-outline"} size={18} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="inbox"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: "Inbox",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? "file-tray-full" : "file-tray-full-outline"}
+              size={18}
+              color={color}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="finance"
+        options={{
+          title: "Finance",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? "cash" : "cash-outline"} size={18} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: "Profile",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? "person" : "person-outline"} size={18} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="more"
+        options={{
+          title: "More",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name="ellipsis-horizontal-circle-outline" size={18} color={color} />
+          ),
         }}
       />
     </Tabs>
-  );
+  )
 }

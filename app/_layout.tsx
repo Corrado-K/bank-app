@@ -1,24 +1,111 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
+import "@/global.css"
+import { useThemeColors } from "@/hooks/useThemeColors"
+import { AppProviders } from "@/providers/AppProviders"
+import { useAppStore } from "@/store/useAppStore"
+import { useFonts } from "@expo-google-fonts/bricolage-grotesque"
+import { DarkTheme, DefaultTheme, ThemeProvider } from "@react-navigation/native"
+import { Stack } from "expo-router"
+import * as SplashScreen from "expo-splash-screen"
+import { StatusBar } from "expo-status-bar"
+import { useColorScheme } from "nativewind"
+import { useEffect } from "react"
+import { Appearance } from "react-native"
+import "react-native-reanimated"
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
+// Prevent the splash screen from auto-hiding
+SplashScreen.preventAutoHideAsync()
 
-export const unstable_settings = {
-  anchor: '(tabs)',
-};
+function RootContent() {
+  const { theme } = useAppStore()
+  const { colorScheme, setColorScheme } = useColorScheme()
+  const colors = useThemeColors()
+  const isDark = colorScheme === "dark"
 
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
+  useEffect(() => {
+    if (theme === "system") {
+      const deviceScheme = Appearance.getColorScheme() || "dark"
+      setColorScheme(deviceScheme)
+    } else {
+      setColorScheme(theme)
+    }
+  }, [theme, setColorScheme])
+
+  useEffect(() => {
+    if (theme !== "system") return
+    const subscription = Appearance.addChangeListener(({ colorScheme: scheme }) => {
+      setColorScheme(scheme || "dark")
+    })
+    return () => subscription.remove()
+  }, [theme, setColorScheme])
+
+  const navTheme = {
+    ...(isDark ? DarkTheme : DefaultTheme),
+    colors: {
+      ...(isDark ? DarkTheme.colors : DefaultTheme.colors),
+      primary: "#ff7c28",
+      background: colors.background,
+      card: colors.surface,
+      text: colors.foreground,
+      border: colors.border,
+      notification: "#ff7c28",
+    },
+  }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+    <ThemeProvider value={navTheme}>
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+        <Stack.Screen
+          name="modal"
+          options={{
+            presentation: "modal",
+            title: "Modal",
+            headerStyle: { backgroundColor: colors.surface },
+            headerTintColor: colors.foreground,
+          }}
+        />
+        <Stack.Screen
+          name="settings"
+          options={{
+            title: "Settings",
+            headerStyle: { backgroundColor: colors.background },
+            headerTintColor: colors.foreground,
+            headerTitleStyle: { fontFamily: "BricolageGrotesque_600SemiBold" },
+            headerBackTitle: "Back",
+            headerBackTitleStyle: { fontFamily: "BricolageGrotesque_600SemiBold", fontSize: 16 },
+          }}
+        />
+        <Stack.Screen name="+not-found" />
       </Stack>
-      <StatusBar style="auto" />
+      <StatusBar style={isDark ? "light" : "dark"} />
     </ThemeProvider>
-  );
+  )
+}
+
+export default function RootLayout() {
+  const [fontsLoaded] = useFonts({
+    BricolageGrotesque_200ExtraLight: require("@expo-google-fonts/bricolage-grotesque/200ExtraLight/BricolageGrotesque_200ExtraLight.ttf"),
+    BricolageGrotesque_300Light: require("@expo-google-fonts/bricolage-grotesque/300Light/BricolageGrotesque_300Light.ttf"),
+    BricolageGrotesque_400Regular: require("@expo-google-fonts/bricolage-grotesque/400Regular/BricolageGrotesque_400Regular.ttf"),
+    BricolageGrotesque_500Medium: require("@expo-google-fonts/bricolage-grotesque/500Medium/BricolageGrotesque_500Medium.ttf"),
+    BricolageGrotesque_600SemiBold: require("@expo-google-fonts/bricolage-grotesque/600SemiBold/BricolageGrotesque_600SemiBold.ttf"),
+    BricolageGrotesque_700Bold: require("@expo-google-fonts/bricolage-grotesque/700Bold/BricolageGrotesque_700Bold.ttf"),
+    BricolageGrotesque_800ExtraBold: require("@expo-google-fonts/bricolage-grotesque/800ExtraBold/BricolageGrotesque_800ExtraBold.ttf"),
+  })
+
+  useEffect(() => {
+    if (fontsLoaded) {
+      SplashScreen.hideAsync()
+    }
+  }, [fontsLoaded])
+
+  if (!fontsLoaded) {
+    return null
+  }
+
+  return (
+    <AppProviders>
+      <RootContent />
+    </AppProviders>
+  )
 }
