@@ -23,7 +23,12 @@ const OPTIONS: { icon: IoniconsName; name: string; description: string; route?: 
   { icon: "people-outline", name: "Beneficiaries", description: "Saved transfer recipients" },
   { icon: "document-text-outline", name: "Statements", description: "Download account statements" },
   { icon: "help-circle-outline", name: "Help & Support", description: "FAQs and contact support" },
-  { icon: "information-circle-outline", name: "About", description: "App version & legal info" },
+  {
+    icon: "information-circle-outline",
+    name: "About",
+    description: "App version & legal info",
+    route: "/about",
+  },
   { icon: "log-out-outline", name: "Log Out", description: "Sign out of your account" },
 ]
 
@@ -31,21 +36,21 @@ export default function MoreScreen() {
   const router = useRouter()
 
   return (
-    <SafeAreaView className="bg-background dark:bg-d-bg flex-1" edges={["top", "bottom"]}>
-      <Text className="text-foreground dark:text-d-fg px-6 py-4 text-lg font-semibold">More</Text>
+    <SafeAreaView className="flex-1 bg-background dark:bg-d-bg" edges={["top", "bottom"]}>
+      <Text className="px-6 py-4 text-lg font-semibold text-foreground dark:text-d-fg">More</Text>
       <ScrollView
         className="flex-1"
         contentContainerClassName="px-6 pb-28"
         showsVerticalScrollIndicator={false}
       >
-        <View className="border-border dark:border-d-border bg-surface dark:bg-d-surface overflow-hidden rounded-2xl border">
+        <View className="overflow-hidden rounded-2xl border border-border bg-surface dark:border-d-border dark:bg-d-surface">
           {OPTIONS.map((option, index) => (
             <Pressable
               key={option.name}
-              className={`flex flex-row items-center gap-3 px-4 py-3.5 ${index < OPTIONS.length - 1 ? "border-border-light dark:border-d-border-light border-b" : ""}`}
+              className={`flex flex-row items-center gap-3 px-4 py-3.5 ${index < OPTIONS.length - 1 ? "border-b border-border-light dark:border-d-border-light" : ""}`}
               onPress={() => option.route && router.push(option.route as never)}
             >
-              <View className="bg-subtle dark:bg-d-subtle h-9 w-9 items-center justify-center rounded-full">
+              <View className="h-9 w-9 items-center justify-center rounded-full bg-subtle dark:bg-d-subtle">
                 <Ionicons
                   name={option.icon}
                   size={18}
@@ -58,7 +63,7 @@ export default function MoreScreen() {
                 >
                   {option.name}
                 </Text>
-                <Text className="text-foreground-muted dark:text-d-fg-muted text-[11px]">
+                <Text className="text-[11px] text-foreground-muted dark:text-d-fg-muted">
                   {option.description}
                 </Text>
               </View>

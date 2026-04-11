@@ -75,6 +75,17 @@ function RootContent() {
             headerBackTitleStyle: { fontFamily: "BricolageGrotesque_600SemiBold", fontSize: 16 },
           }}
         />
+        <Stack.Screen
+          name="about"
+          options={{
+            title: "About",
+            headerStyle: { backgroundColor: colors.background },
+            headerTintColor: colors.foreground,
+            headerTitleStyle: { fontFamily: "BricolageGrotesque_600SemiBold" },
+            headerBackTitle: "More",
+            headerBackTitleStyle: { fontFamily: "BricolageGrotesque_600SemiBold", fontSize: 16 },
+          }}
+        />
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style={isDark ? "light" : "dark"} />

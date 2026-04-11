@@ -2,7 +2,7 @@ import { useThemeColors } from "@/hooks/useThemeColors"
 import { StyleSheet, View } from "react-native"
 import Svg, { Path } from "react-native-svg"
 
-const TAB_BAR_HEIGHT = 56
+const TAB_BAR_HEIGHT = 48
 const NOTCH_RADIUS = 38
 const CURVE_SPREAD = 22
 

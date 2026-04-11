@@ -3,14 +3,19 @@ import * as Haptics from "expo-haptics"
 import { Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 
+import { useThemeColors } from "@/hooks/useThemeColors"
 import TabBarBackground, { NOTCH_RADIUS, TAB_BAR_HEIGHT } from "./ui/tab-bar-background"
 
 export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const { width } = useWindowDimensions()
   const insets = useSafeAreaInsets()
+  const colors = useThemeColors()
 
   return (
-    <View style={[styles.wrapper, { paddingBottom: insets.bottom }]} pointerEvents="box-none">
+    <View
+      style={[styles.wrapper, { backgroundColor: colors.tabBar, paddingBottom: insets.bottom }]}
+      pointerEvents="box-none"
+    >
       <TabBarBackground width={width} />
       <View style={styles.tabRow} pointerEvents="box-none">
         {state.routes.map((route, index) => {

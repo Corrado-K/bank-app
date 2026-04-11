@@ -32,7 +32,7 @@ export default function AccountInfo() {
         />
 
         <View className="mt-1 flex flex-row items-center gap-2">
-          <Text className="text-foreground dark:text-d-fg text-2xl font-bold">
+          <Text className="text-2xl font-bold text-foreground dark:text-d-fg">
             {formattedBalance}
           </Text>
           <Pressable onPress={() => setBalanceVisible(!balanceVisible)}>
@@ -44,23 +44,23 @@ export default function AccountInfo() {
           </Pressable>
         </View>
 
-        <Text className="text-foreground-muted dark:text-d-fg-muted mt-0.5 text-xs">
+        <Text className="mt-0.5 text-xs text-foreground-muted dark:text-d-fg-muted">
           Wallet Balance
         </Text>
       </View>
 
       <View className="flex flex-row gap-2">
         <View className="flex flex-col items-center gap-2">
-          <Pressable className="bg-primary items-center justify-center rounded-full px-2 py-2">
+          <Pressable className="items-center justify-center rounded-full bg-primary px-2 py-2">
             <Ionicons name="wallet" size={18} color="#fff" />
           </Pressable>
-          <Text className="text-foreground dark:text-d-fg text-xs font-semibold">Top Up</Text>
+          <Text className="text-xs font-semibold text-foreground dark:text-d-fg">Top Up</Text>
         </View>
         <View className="flex flex-col items-center gap-2">
-          <Pressable className="bg-primary items-center justify-center rounded-full px-2 py-2">
+          <Pressable className="items-center justify-center rounded-full bg-primary px-2 py-2">
             <Ionicons name="cash" size={18} color="#fff" />
           </Pressable>
-          <Text className="text-foreground dark:text-d-fg text-xs font-semibold">Withdraw</Text>
+          <Text className="text-xs font-semibold text-foreground dark:text-d-fg">Withdraw</Text>
         </View>
       </View>
     </View>
