@@ -21,7 +21,7 @@ export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarPro
         {state.routes.map((route, index) => {
           const { options } = descriptors[route.key]
           const isFocused = state.index === index
-          const isFinance = route.name === "finance"
+          const isCenter = route.name === "pay"
 
           const onPress = () => {
             if (process.env.EXPO_OS === "ios") {
@@ -37,7 +37,7 @@ export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarPro
             }
           }
 
-          if (isFinance) {
+          if (isCenter) {
             return (
               <View key={route.key} style={styles.centerButtonWrapper}>
                 <View style={styles.centerButton}>

@@ -1,8 +1,8 @@
+import { AppHeader } from "@/components/ui/AppHeader"
 import { useThemeColors } from "@/hooks/useThemeColors"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import Constants from "expo-constants"
 import * as Haptics from "expo-haptics"
-import { useRouter } from "expo-router"
 import * as Updates from "expo-updates"
 import { useState } from "react"
 import { Alert, Linking, Pressable, ScrollView, Text, View } from "react-native"
@@ -52,8 +52,6 @@ function LinkRow({
 }
 
 export default function AboutScreen() {
-  const router = useRouter()
-  const colors = useThemeColors()
   const [updateStatus, setUpdateStatus] = useState<UpdateStatus>("idle")
 
   async function checkForUpdate() {
@@ -120,8 +118,12 @@ export default function AboutScreen() {
   const isLoading = updateStatus === "checking" || updateStatus === "downloading"
 
   return (
-    <SafeAreaView className="flex-1 bg-background dark:bg-d-bg" edges={["bottom"]}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
+    <SafeAreaView className="flex-1 bg-background dark:bg-d-bg" edges={["top", "bottom"]}>
+      <AppHeader title="About" showBack />
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 32 }}
+      >
         {/* App Identity */}
         <View className="items-center px-6 py-10">
           <View className="mb-4 h-20 w-20 items-center justify-center rounded-[22px] bg-primary shadow-lg">
@@ -151,17 +153,13 @@ export default function AboutScreen() {
             disabled={isLoading}
             className={`flex-row items-center justify-center gap-2 rounded-2xl py-4 ${
               updateStatus === "up-to-date"
-                ? "bg-emerald-500"
+                ? "bg-success"
                 : updateStatus === "error"
-                  ? "bg-red-500"
+                  ? "bg-danger"
                   : "bg-primary"
             } ${isLoading ? "opacity-70" : "active:opacity-80"}`}
           >
-            <Ionicons
-              name={updateButtonIcon[updateStatus]}
-              size={18}
-              color="#ffffff"
-            />
+            <Ionicons name={updateButtonIcon[updateStatus]} size={18} color="#ffffff" />
             <Text className="text-base font-semibold text-white">
               {updateButtonLabel[updateStatus]}
             </Text>

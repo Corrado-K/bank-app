@@ -1,77 +1,169 @@
+import { Avatar } from "@/components/ui/Avatar"
+import { AppHeader } from "@/components/ui/AppHeader"
+import { Card } from "@/components/ui/Card"
+import { ListRow } from "@/components/ui/ListRow"
+import { Screen } from "@/components/ui/Screen"
+import { useThemeColors } from "@/hooks/useThemeColors"
+import { ACCOUNT_HOLDER } from "@/store/useBankStore"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useRouter } from "expo-router"
 import React from "react"
-import { Pressable, ScrollView, Text, View } from "react-native"
-import { SafeAreaView } from "react-native-safe-area-context"
+import { Alert, Pressable, ScrollView, Text, View } from "react-native"
 
-type IoniconsName = React.ComponentProps<typeof Ionicons>["name"]
+type IoniconName = React.ComponentProps<typeof Ionicons>["name"]
 
-const OPTIONS: { icon: IoniconsName; name: string; description: string; route?: string }[] = [
+interface Item {
+  icon: IoniconName
+  color: string
+  name: string
+  description: string
+  route?: string
+}
+
+const GROUPS: { label: string; items: Item[] }[] = [
   {
-    icon: "settings-outline",
-    name: "Settings",
-    description: "Manage your app preferences",
-    route: "/settings",
+    label: "Banking",
+    items: [
+      {
+        icon: "card-outline",
+        color: "#6366f1",
+        name: "Cards",
+        description: "Manage debit & credit cards",
+        route: "/cards",
+      },
+      {
+        icon: "receipt-outline",
+        color: "#16a34a",
+        name: "Transactions",
+        description: "Full activity history",
+        route: "/transactions",
+      },
+      {
+        icon: "people-outline",
+        color: "#ec4899",
+        name: "Recipients",
+        description: "Saved transfer payees",
+        route: "/send",
+      },
+      {
+        icon: "document-text-outline",
+        color: "#0ea5e9",
+        name: "Statements",
+        description: "Download account statements",
+      },
+    ],
   },
-  { icon: "shield-checkmark-outline", name: "Security", description: "Password, biometrics & 2FA" },
   {
-    icon: "notifications-outline",
-    name: "Notifications",
-    description: "Manage push & email alerts",
+    label: "Preferences",
+    items: [
+      {
+        icon: "settings-outline",
+        color: "#64748b",
+        name: "Settings",
+        description: "App preferences",
+        route: "/settings",
+      },
+      {
+        icon: "shield-checkmark-outline",
+        color: "#16a34a",
+        name: "Security",
+        description: "Password, biometrics & 2FA",
+        route: "/settings",
+      },
+      {
+        icon: "notifications-outline",
+        color: "#f59e0b",
+        name: "Notifications",
+        description: "Push & email alerts",
+        route: "/settings",
+      },
+    ],
   },
-  { icon: "card-outline", name: "Cards", description: "Manage your debit & credit cards" },
-  { icon: "people-outline", name: "Beneficiaries", description: "Saved transfer recipients" },
-  { icon: "document-text-outline", name: "Statements", description: "Download account statements" },
-  { icon: "help-circle-outline", name: "Help & Support", description: "FAQs and contact support" },
   {
-    icon: "information-circle-outline",
-    name: "About",
-    description: "App version & legal info",
-    route: "/about",
+    label: "Support",
+    items: [
+      {
+        icon: "help-circle-outline",
+        color: "#a855f7",
+        name: "Help & Support",
+        description: "FAQs and contact support",
+      },
+      {
+        icon: "information-circle-outline",
+        color: "#ff7c28",
+        name: "About",
+        description: "App version & legal",
+        route: "/about",
+      },
+    ],
   },
-  { icon: "log-out-outline", name: "Log Out", description: "Sign out of your account" },
 ]
 
 export default function MoreScreen() {
   const router = useRouter()
+  const colors = useThemeColors()
+
+  const open = (item: Item) => {
+    if (item.route) router.push(item.route as never)
+    else Alert.alert(item.name, "This feature isn't available in the demo yet.")
+  }
 
   return (
-    <SafeAreaView className="flex-1 bg-background dark:bg-d-bg" edges={["top", "bottom"]}>
-      <Text className="px-6 py-4 text-lg font-semibold text-foreground dark:text-d-fg">More</Text>
+    <Screen edges={["top"]}>
+      <AppHeader title="More" large />
       <ScrollView
         className="flex-1"
-        contentContainerClassName="px-6 pb-28"
+        contentContainerClassName="px-5 pb-28 pt-2"
         showsVerticalScrollIndicator={false}
       >
-        <View className="overflow-hidden rounded-2xl border border-border bg-surface dark:border-d-border dark:bg-d-surface">
-          {OPTIONS.map((option, index) => (
-            <Pressable
-              key={option.name}
-              className={`flex flex-row items-center gap-3 px-4 py-3.5 ${index < OPTIONS.length - 1 ? "border-b border-border-light dark:border-d-border-light" : ""}`}
-              onPress={() => option.route && router.push(option.route as never)}
-            >
-              <View className="h-9 w-9 items-center justify-center rounded-full bg-subtle dark:bg-d-subtle">
-                <Ionicons
-                  name={option.icon}
-                  size={18}
-                  color={option.name === "Log Out" ? "#ef4444" : "#ff7c28"}
+        <Pressable
+          onPress={() => router.push("/profile")}
+          className="mb-2 flex-row items-center gap-3 rounded-2xl border border-border bg-surface p-4 active:opacity-70 dark:border-d-border dark:bg-d-surface"
+        >
+          <Avatar name={ACCOUNT_HOLDER} color={colors.primary} size={48} />
+          <View className="flex-1">
+            <Text className="text-base font-semibold text-foreground dark:text-d-fg">
+              {ACCOUNT_HOLDER}
+            </Text>
+            <Text className="text-xs text-foreground-secondary dark:text-d-fg-secondary">
+              View profile
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={colors.chevronInactive} />
+        </Pressable>
+
+        {GROUPS.map((group) => (
+          <View key={group.label}>
+            <Text className="mb-2 mt-6 px-1 text-xs font-semibold uppercase tracking-wider text-foreground-secondary dark:text-d-fg-secondary">
+              {group.label}
+            </Text>
+            <Card flush>
+              {group.items.map((item, index) => (
+                <ListRow
+                  key={item.name}
+                  left={
+                    <View
+                      className="h-9 w-9 items-center justify-center rounded-full"
+                      style={{ backgroundColor: item.color + "22" }}
+                    >
+                      <Ionicons name={item.icon} size={18} color={item.color} />
+                    </View>
+                  }
+                  title={item.name}
+                  subtitle={item.description}
+                  onPress={() => open(item)}
+                  showChevron
+                  divider={index < group.items.length - 1}
                 />
-              </View>
-              <View className="flex-1">
-                <Text
-                  className={`text-sm font-medium ${option.name === "Log Out" ? "text-red-400" : "text-foreground dark:text-d-fg"}`}
-                >
-                  {option.name}
-                </Text>
-                <Text className="text-[11px] text-foreground-muted dark:text-d-fg-muted">
-                  {option.description}
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={16} color="#6b7280" />
-            </Pressable>
-          ))}
-        </View>
+              ))}
+            </Card>
+          </View>
+        ))}
+
+        <Text className="mt-8 text-center text-xs text-foreground-muted dark:text-d-fg-muted">
+          Fidelity • v1.0.0
+        </Text>
       </ScrollView>
-    </SafeAreaView>
+    </Screen>
   )
 }

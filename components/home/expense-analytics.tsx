@@ -1,51 +1,25 @@
-import Dropdown from "@/components/ui/dropdown"
+import { Card } from "@/components/ui/Card"
+import { SectionHeader } from "@/components/ui/SectionHeader"
 import { useThemeColors } from "@/hooks/useThemeColors"
-import React, { useState } from "react"
+import { monthLabel, spendingByCategory } from "@/lib/analytics"
+import { formatCurrency } from "@/lib/format"
+import { useBankStore } from "@/store/useBankStore"
+import { useRouter } from "expo-router"
+import React, { useMemo } from "react"
 import { Text, View } from "react-native"
 import Svg, { Circle, G } from "react-native-svg"
 
-const MONTHS = [
-  { id: "2026-04", label: "Apr 2026" },
-  { id: "2026-03", label: "Mar 2026" },
-  { id: "2026-02", label: "Feb 2026" },
-  { id: "2026-01", label: "Jan 2026" },
-  { id: "2025-12", label: "Dec 2025" },
-  { id: "2025-11", label: "Nov 2025" },
-]
-
-const EXPENSES: Record<string, { category: string; amount: number; color: string }[]> = {
-  "2026-04": [
-    { category: "Food", amount: 1240, color: "#ff7c28" },
-    { category: "Investment", amount: 3500, color: "#4ade80" },
-    { category: "Clothes", amount: 680, color: "#60a5fa" },
-    { category: "Others", amount: 420, color: "#a78bfa" },
-  ],
-  "2026-03": [
-    { category: "Food", amount: 980, color: "#ff7c28" },
-    { category: "Investment", amount: 2800, color: "#4ade80" },
-    { category: "Clothes", amount: 520, color: "#60a5fa" },
-    { category: "Others", amount: 350, color: "#a78bfa" },
-  ],
-}
-
-const DEFAULT_EXPENSES = [
-  { category: "Food", amount: 0, color: "#ff7c28" },
-  { category: "Investment", amount: 0, color: "#4ade80" },
-  { category: "Clothes", amount: 0, color: "#60a5fa" },
-  { category: "Others", amount: 0, color: "#a78bfa" },
-]
-
-const CHART_SIZE = 120
-const STROKE_WIDTH = 14
+const CHART_SIZE = 128
+const STROKE_WIDTH = 16
 const RADIUS = (CHART_SIZE - STROKE_WIDTH) / 2
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS
 
 function DoughnutChart({
-  expenses,
+  segments,
   total,
   trackColor,
 }: {
-  expenses: { category: string; amount: number; color: string }[]
+  segments: { color: string; amount: number }[]
   total: number
   trackColor: string
 }) {
@@ -63,23 +37,22 @@ function DoughnutChart({
             strokeWidth={STROKE_WIDTH}
             fill="none"
           />
-          {expenses.map((expense) => {
-            const percentage = total > 0 ? expense.amount / total : 0
-            const strokeDasharray = `${CIRCUMFERENCE * percentage} ${CIRCUMFERENCE * (1 - percentage)}`
-            const strokeDashoffset = -CIRCUMFERENCE * accumulated
+          {segments.map((seg, i) => {
+            const percentage = total > 0 ? seg.amount / total : 0
+            const dash = `${CIRCUMFERENCE * percentage} ${CIRCUMFERENCE * (1 - percentage)}`
+            const offset = -CIRCUMFERENCE * accumulated
             accumulated += percentage
-
             return (
               <Circle
-                key={expense.category}
+                key={i}
                 cx={CHART_SIZE / 2}
                 cy={CHART_SIZE / 2}
                 r={RADIUS}
-                stroke={expense.color}
+                stroke={seg.color}
                 strokeWidth={STROKE_WIDTH}
-                strokeDasharray={strokeDasharray}
-                strokeDashoffset={strokeDashoffset}
-                strokeLinecap="round"
+                strokeDasharray={dash}
+                strokeDashoffset={offset}
+                strokeLinecap="butt"
                 fill="none"
               />
             )
@@ -87,61 +60,85 @@ function DoughnutChart({
         </G>
       </Svg>
       <View className="absolute items-center">
-        <Text className="text-foreground dark:text-d-fg text-base font-bold">
-          ${total.toLocaleString("en-US")}
+        <Text className="text-[10px] text-foreground-muted dark:text-d-fg-muted">Spent</Text>
+        <Text className="text-base font-bold text-foreground dark:text-d-fg">
+          {formatCurrency(total, { compact: true })}
         </Text>
-        <Text className="text-foreground-muted dark:text-d-fg-muted text-[9px]">Total</Text>
       </View>
     </View>
   )
 }
 
 export default function ExpenseAnalytics() {
-  const [selectedMonth, setSelectedMonth] = useState(MONTHS[0])
+  const router = useRouter()
   const colors = useThemeColors()
+  const transactions = useBankStore((s) => s.transactions)
 
-  const expenses = EXPENSES[selectedMonth.id] ?? DEFAULT_EXPENSES
-  const total = expenses.reduce((sum, e) => sum + e.amount, 0)
+  const { total, categories } = useMemo(() => spendingByCategory(transactions), [transactions])
+
+  // Show the top 4 categories individually and roll the rest into "Other" so the
+  // ring always fills completely and the legend percentages sum to 100%.
+  const display = useMemo(() => {
+    const base = categories.slice(0, 4).map((c) => ({
+      key: c.category as string,
+      label: c.label,
+      color: c.color,
+      amount: c.amount,
+    }))
+    const restTotal = categories.slice(4).reduce((sum, c) => sum + c.amount, 0)
+    if (restTotal > 0) {
+      base.push({ key: "__other", label: "Other", color: "#94a3b8", amount: restTotal })
+    }
+    return base
+  }, [categories])
 
   return (
-    <View className="border-border dark:border-d-border bg-surface dark:bg-d-surface rounded-2xl border p-4">
-      <View className="flex flex-row items-center justify-between">
-        <Text className="text-foreground dark:text-d-fg text-sm font-semibold">Analytics</Text>
-        <Dropdown items={MONTHS} selected={selectedMonth} onSelect={setSelectedMonth} />
-      </View>
-
-      <View className="mt-4 flex flex-row">
-        <View className="items-center justify-center">
-          <DoughnutChart expenses={expenses} total={total} trackColor={colors.doughnutTrack} />
-        </View>
-
-        <View className="ml-4 flex-1 justify-center gap-3">
-          {expenses.map((expense) => {
-            const percentage = total > 0 ? ((expense.amount / total) * 100).toFixed(1) : "0.0"
-            return (
-              <View key={expense.category} className="flex flex-row items-center justify-between">
-                <View className="flex flex-row items-center gap-2">
-                  <View
-                    className="h-2.5 w-2.5 rounded-full"
-                    style={{ backgroundColor: expense.color }}
-                  />
-                  <View>
-                    <Text className="text-foreground dark:text-d-fg text-xs">
-                      {expense.category}
-                    </Text>
-                    <Text className="text-foreground-muted dark:text-d-fg-muted text-[10px]">
-                      ${expense.amount.toLocaleString("en-US")}
-                    </Text>
+    <View className="gap-3">
+      <SectionHeader
+        title="Spending"
+        actionLabel="Details"
+        onAction={() => router.push("/transactions")}
+      />
+      <Card>
+        <Text className="text-xs text-foreground-secondary dark:text-d-fg-secondary">
+          {monthLabel()}
+        </Text>
+        {total === 0 ? (
+          <View className="items-center py-8">
+            <Text className="text-sm text-foreground-secondary dark:text-d-fg-secondary">
+              No spending recorded this month
+            </Text>
+          </View>
+        ) : (
+          <View className="mt-3 flex-row items-center">
+            <DoughnutChart segments={display} total={total} trackColor={colors.doughnutTrack} />
+            <View className="ml-5 flex-1 gap-3">
+              {display.map((c) => {
+                const pct = total > 0 ? ((c.amount / total) * 100).toFixed(0) : "0"
+                return (
+                  <View key={c.key} className="flex-row items-center justify-between">
+                    <View className="flex-row items-center gap-2">
+                      <View
+                        className="h-2.5 w-2.5 rounded-full"
+                        style={{ backgroundColor: c.color }}
+                      />
+                      <Text className="text-xs text-foreground dark:text-d-fg">{c.label}</Text>
+                    </View>
+                    <View className="flex-row items-center gap-2">
+                      <Text className="text-xs text-foreground-secondary dark:text-d-fg-secondary">
+                        {formatCurrency(c.amount, { compact: true })}
+                      </Text>
+                      <Text className="w-8 text-right text-xs font-medium text-foreground-muted dark:text-d-fg-muted">
+                        {pct}%
+                      </Text>
+                    </View>
                   </View>
-                </View>
-                <Text className="text-foreground-secondary dark:text-d-fg-secondary text-xs font-medium">
-                  {percentage}%
-                </Text>
-              </View>
-            )
-          })}
-        </View>
-      </View>
+                )
+              })}
+            </View>
+          </View>
+        )}
+      </Card>
     </View>
   )
 }

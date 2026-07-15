@@ -31,18 +31,22 @@ module.exports = {
         secondary: {
           DEFAULT: "rgba(255, 124, 40, 0.5)",
         },
-        // Light mode (default)
-        background: "#ffffff",
-        surface: { DEFAULT: "#f5f5f5", light: "#ebebeb" },
-        foreground: { DEFAULT: "#111111", secondary: "#6b7280", muted: "#9ca3af" },
-        border: { DEFAULT: "#e5e7eb", light: "#f0f0f0" },
-        subtle: "#f3f4f6",
+        // Semantic accents (shared across themes)
+        success: { DEFAULT: "#16a34a", light: "#22c55e" },
+        danger: { DEFAULT: "#dc2626", light: "#ef4444" },
+        info: { DEFAULT: "#2563eb", light: "#3b82f6" },
+        // Light mode (default) — app bg is a soft gray, cards are white so they lift
+        background: { DEFAULT: "#f4f5f7", elevated: "#ffffff" },
+        surface: { DEFAULT: "#ffffff", light: "#f1f2f4" },
+        foreground: { DEFAULT: "#0f1115", secondary: "#5b616e", muted: "#9096a1" },
+        border: { DEFAULT: "#e6e8ec", light: "#eef0f3" },
+        subtle: "#f1f2f4",
         // Dark mode (used with dark: prefix)
-        "d-bg": "#141414",
-        "d-surface": { DEFAULT: "#1d1d1d", light: "#202020" },
-        "d-fg": { DEFAULT: "#ffffff", secondary: "#9ca3af", muted: "#6b7280" },
-        "d-border": { DEFAULT: "#2a2a2a", light: "#222222" },
-        "d-subtle": "#262626",
+        "d-bg": { DEFAULT: "#0d0e10", elevated: "#1a1b1e" },
+        "d-surface": { DEFAULT: "#1a1b1e", light: "#232529" },
+        "d-fg": { DEFAULT: "#f5f6f7", secondary: "#9ca3af", muted: "#6b7280" },
+        "d-border": { DEFAULT: "#2a2c31", light: "#232529" },
+        "d-subtle": "#232529",
       },
     },
   },

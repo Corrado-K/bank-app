@@ -1,182 +1,118 @@
-import { useThemeColors } from "@/hooks/useThemeColors"
+import { AppHeader } from "@/components/ui/AppHeader"
+import { Avatar } from "@/components/ui/Avatar"
+import { EmptyState } from "@/components/ui/EmptyState"
+import { Screen } from "@/components/ui/Screen"
+import { categoryMeta } from "@/constants/categories"
+import { formatCurrency, formatRelativeDate, formatTime } from "@/lib/format"
+import { useBankStore } from "@/store/useBankStore"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import * as Haptics from "expo-haptics"
-import { useState } from "react"
+import { useRouter } from "expo-router"
+import { useMemo, useState } from "react"
 import { FlatList, Pressable, SectionList, Text, View } from "react-native"
-import { SafeAreaView } from "react-native-safe-area-context"
 
-type ItemType = "message" | "notification" | "transaction"
+type ItemType = "message" | "alert" | "transaction"
 type FilterType = "all" | ItemType
+type IoniconName = React.ComponentProps<typeof Ionicons>["name"]
 
 interface InboxItem {
   id: string
   type: ItemType
   title: string
   body: string
-  time: string
-  date: string
-  unread?: boolean
+  date: string // ISO
+  icon: IoniconName
+  color: string
+  unread: boolean
+  transactionId?: string
   amount?: number
-  transactionType?: "credit" | "debit"
 }
 
-const INBOX_DATA: InboxItem[] = [
-  // Today
+function daysAgoIso(days: number, hour: number, minute: number): string {
+  const d = new Date()
+  d.setDate(d.getDate() - days)
+  d.setHours(hour, minute, 0, 0)
+  return d.toISOString()
+}
+
+const STATIC_ITEMS: InboxItem[] = [
   {
-    id: "1",
-    type: "transaction",
-    title: "Netflix Subscription",
-    body: "Monthly subscription charge",
-    time: "9:41 AM",
-    date: "Today",
-    amount: -15.99,
-    transactionType: "debit",
-  },
-  {
-    id: "2",
-    type: "notification",
-    title: "Login from new device",
+    id: "m1",
+    type: "alert",
+    title: "Login from a new device",
     body: "A new sign-in was detected on iPhone 16 Pro in New York.",
-    time: "8:15 AM",
-    date: "Today",
+    date: daysAgoIso(0, 8, 15),
+    icon: "shield-checkmark",
+    color: "#ff7c28",
     unread: true,
   },
   {
-    id: "3",
+    id: "m2",
     type: "message",
     title: "Fidelity Support",
-    body: "Your dispute for transaction #TXN-8821 has been resolved.",
-    time: "7:02 AM",
-    date: "Today",
-    unread: true,
-  },
-  // Yesterday
-  {
-    id: "4",
-    type: "transaction",
-    title: "Salary Deposit",
-    body: "Direct deposit from Acme Corp",
-    time: "12:00 AM",
-    date: "Yesterday",
-    amount: 4200.0,
-    transactionType: "credit",
+    body: "Your dispute for transaction #TXN-8821 has been resolved in your favor.",
+    date: daysAgoIso(0, 7, 2),
+    icon: "chatbubble-ellipses",
+    color: "#3b82f6",
     unread: true,
   },
   {
-    id: "5",
-    type: "notification",
-    title: "Card limit reached",
-    body: "You've used 90% of your credit card limit.",
-    time: "6:30 PM",
-    date: "Yesterday",
+    id: "m3",
+    type: "alert",
+    title: "Credit limit reminder",
+    body: "You've used 62% of your Rewards Credit limit this cycle.",
+    date: daysAgoIso(1, 18, 30),
+    icon: "notifications",
+    color: "#f59e0b",
+    unread: false,
   },
   {
-    id: "6",
+    id: "m4",
     type: "message",
     title: "Fidelity Rewards",
-    body: "You've earned 240 points on your last purchase. Redeem now.",
-    time: "3:18 PM",
-    date: "Yesterday",
+    body: "You've earned 240 points on recent purchases. Redeem them for cashback.",
+    date: daysAgoIso(2, 15, 18),
+    icon: "gift",
+    color: "#a855f7",
+    unread: false,
   },
   {
-    id: "7",
-    type: "transaction",
-    title: "Whole Foods Market",
-    body: "Purchase at Whole Foods",
-    time: "1:44 PM",
-    date: "Yesterday",
-    amount: -87.23,
-    transactionType: "debit",
-  },
-  // Apr 8
-  {
-    id: "8",
-    type: "transaction",
-    title: "Uber",
-    body: "Ride to JFK Airport",
-    time: "11:20 PM",
-    date: "Apr 8",
-    amount: -34.5,
-    transactionType: "debit",
-  },
-  {
-    id: "9",
-    type: "notification",
+    id: "m5",
+    type: "alert",
     title: "Statement ready",
-    body: "Your March statement is now available. Total spend: $2,340.",
-    time: "9:00 AM",
-    date: "Apr 8",
-  },
-  {
-    id: "10",
-    type: "message",
-    title: "Fidelity Support",
-    body: "Your identity verification is complete. All features are now unlocked.",
-    time: "2:05 PM",
-    date: "Apr 8",
-  },
-  // Apr 7
-  {
-    id: "11",
-    type: "transaction",
-    title: "Transfer to Savings",
-    body: "Scheduled transfer to Savings Account",
-    time: "8:00 AM",
-    date: "Apr 7",
-    amount: -500.0,
-    transactionType: "debit",
-  },
-  {
-    id: "12",
-    type: "notification",
-    title: "New offer available",
-    body: "Get 5% cashback on dining this weekend. Tap to activate.",
-    time: "10:30 AM",
-    date: "Apr 7",
+    body: "Your latest account statement is now available to download.",
+    date: daysAgoIso(4, 9, 0),
+    icon: "document-text",
+    color: "#0ea5e9",
+    unread: false,
   },
 ]
 
 const FILTERS: { key: FilterType; label: string }[] = [
   { key: "all", label: "All" },
   { key: "message", label: "Messages" },
-  { key: "notification", label: "Notifications" },
+  { key: "alert", label: "Alerts" },
   { key: "transaction", label: "Transactions" },
 ]
 
-const TYPE_CONFIG: Record<
-  ItemType,
-  { icon: keyof typeof Ionicons.glyphMap; bg: string; color: string }
-> = {
-  message: { icon: "chatbubble-ellipses", bg: "#3b82f6", color: "#ffffff" },
-  notification: { icon: "notifications", bg: "#ff7c28", color: "#ffffff" },
-  transaction: { icon: "swap-horizontal", bg: "#10b981", color: "#ffffff" },
-}
-
 function groupByDate(items: InboxItem[]) {
-  const map: Record<string, InboxItem[]> = {}
-  for (const item of items) {
-    if (!map[item.date]) map[item.date] = []
-    map[item.date].push(item)
+  const sorted = [...items].sort((a, b) => +new Date(b.date) - +new Date(a.date))
+  const map = new Map<string, InboxItem[]>()
+  for (const it of sorted) {
+    const key = formatRelativeDate(it.date)
+    if (!map.has(key)) map.set(key, [])
+    map.get(key)!.push(it)
   }
-  return Object.entries(map).map(([title, data]) => ({ title, data }))
+  return [...map.entries()].map(([title, data]) => ({ title, data }))
 }
 
 function InboxRow({ item, onPress }: { item: InboxItem; onPress: () => void }) {
-  const colors = useThemeColors()
-  const config = TYPE_CONFIG[item.type]
-
   return (
     <Pressable
       onPress={onPress}
-      className="flex-row items-start gap-3 px-4 py-3.5 active:opacity-70"
+      className="flex-row items-start gap-3 px-5 py-3.5 active:opacity-60"
     >
-      <View
-        className="mt-0.5 h-10 w-10 items-center justify-center rounded-full"
-        style={{ backgroundColor: config.bg }}
-      >
-        <Ionicons name={config.icon} size={18} color={config.color} />
-      </View>
-
+      <Avatar icon={item.icon} color={item.color} size={42} />
       <View className="flex-1">
         <View className="flex-row items-center justify-between">
           <Text
@@ -186,25 +122,23 @@ function InboxRow({ item, onPress }: { item: InboxItem; onPress: () => void }) {
             {item.title}
           </Text>
           <View className="flex-row items-center gap-1.5">
-            <Text className="text-xs text-foreground-muted dark:text-d-fg-muted">{item.time}</Text>
+            <Text className="text-[11px] text-foreground-muted dark:text-d-fg-muted">
+              {formatTime(item.date)}
+            </Text>
             {item.unread && <View className="h-2 w-2 rounded-full bg-primary" />}
           </View>
         </View>
-
         <Text
           className="mt-0.5 text-sm leading-5 text-foreground-secondary dark:text-d-fg-secondary"
           numberOfLines={2}
         >
           {item.body}
         </Text>
-
         {item.amount !== undefined && (
           <Text
-            className="mt-1 text-sm font-semibold"
-            style={{ color: item.transactionType === "credit" ? "#10b981" : colors.foreground }}
+            className={`mt-1 text-sm font-semibold ${item.amount > 0 ? "text-success-light" : "text-foreground dark:text-d-fg"}`}
           >
-            {item.transactionType === "credit" ? "+" : ""}
-            {item.amount.toLocaleString("en-US", { style: "currency", currency: "USD" })}
+            {formatCurrency(item.amount, { showSign: true })}
           </Text>
         )}
       </View>
@@ -213,59 +147,87 @@ function InboxRow({ item, onPress }: { item: InboxItem; onPress: () => void }) {
 }
 
 export default function InboxScreen() {
+  const router = useRouter()
+  const transactions = useBankStore((s) => s.transactions)
   const [filter, setFilter] = useState<FilterType>("all")
   const [readIds, setReadIds] = useState<Set<string>>(new Set())
 
-  const filtered = filter === "all" ? INBOX_DATA : INBOX_DATA.filter((i) => i.type === filter)
-  const sections = groupByDate(filtered)
+  const items = useMemo<InboxItem[]>(() => {
+    const txItems: InboxItem[] = [...transactions]
+      .sort((a, b) => +new Date(b.date) - +new Date(a.date))
+      .slice(0, 8)
+      .map((t) => {
+        const meta = categoryMeta(t.category)
+        return {
+          id: `tx-alert-${t.id}`,
+          type: "transaction" as const,
+          title: t.title,
+          body:
+            t.amount > 0
+              ? "Money received in your account"
+              : `Payment ${t.status === "pending" ? "pending" : "completed"}`,
+          date: t.date,
+          icon: meta.icon,
+          color: meta.color,
+          unread: false,
+          transactionId: t.id,
+          amount: t.amount,
+        }
+      })
+    return [...STATIC_ITEMS, ...txItems]
+  }, [transactions])
 
-  const unreadCount = INBOX_DATA.filter((i) => i.unread && !readIds.has(i.id)).length
+  const sections = useMemo(() => {
+    const filtered = filter === "all" ? items : items.filter((i) => i.type === filter)
+    return groupByDate(filtered.map((i) => ({ ...i, unread: i.unread && !readIds.has(i.id) })))
+  }, [items, filter, readIds])
 
-  function markRead(item: InboxItem) {
+  const unreadCount = items.filter((i) => i.unread && !readIds.has(i.id)).length
+
+  function openItem(item: InboxItem) {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-    setReadIds((prev) => new Set([...prev, item.id]))
+    setReadIds((prev) => new Set(prev).add(item.id))
+    if (item.transactionId) router.push(`/transaction/${item.transactionId}` as never)
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background dark:bg-d-bg" edges={["top"]}>
-      {/* Header */}
-      <View className="flex-row items-center justify-between border-b border-border px-4 pb-3 pt-2 dark:border-d-border">
-        <View>
-          <Text className="text-2xl font-bold text-foreground dark:text-d-fg">Inbox</Text>
-          {unreadCount > 0 && (
-            <Text className="text-xs text-foreground-secondary dark:text-d-fg-secondary">
-              {unreadCount} unread
-            </Text>
-          )}
-        </View>
-        <Pressable
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-            setReadIds(new Set(INBOX_DATA.map((i) => i.id)))
-          }}
-          className="rounded-full px-3 py-1.5 active:opacity-60"
-        >
-          <Text className="text-sm font-semibold text-primary">Mark all read</Text>
-        </Pressable>
-      </View>
+    <Screen edges={["top"]}>
+      <AppHeader
+        title="Inbox"
+        subtitle={unreadCount > 0 ? `${unreadCount} unread` : "You're all caught up"}
+        large
+        right={
+          unreadCount > 0 ? (
+            <Pressable
+              onPress={() => {
+                Haptics.selectionAsync()
+                setReadIds(new Set(items.map((i) => i.id)))
+              }}
+              hitSlop={8}
+              className="active:opacity-60"
+            >
+              <Text className="text-sm font-semibold text-primary">Mark all read</Text>
+            </Pressable>
+          ) : undefined
+        }
+      />
 
-      {/* Filter Pills */}
-      <View className="border-b border-border dark:border-d-border">
+      <View className="pb-1">
         <FlatList
           data={FILTERS}
           horizontal
           showsHorizontalScrollIndicator={false}
           keyExtractor={(item) => item.key}
-          contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10, gap: 8 }}
+          contentContainerStyle={{ paddingHorizontal: 20, gap: 8, paddingVertical: 4 }}
           renderItem={({ item }) => {
             const active = filter === item.key
             return (
               <Pressable
                 onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+                  Haptics.selectionAsync()
                   setFilter(item.key)
                 }}
-                className={`rounded-full px-4 py-1.5 ${
+                className={`rounded-full px-4 py-2 ${
                   active
                     ? "bg-primary"
                     : "border border-border bg-surface dark:border-d-border dark:bg-d-surface"
@@ -282,29 +244,30 @@ export default function InboxScreen() {
         />
       </View>
 
-      {/* List */}
       <SectionList
         sections={sections}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <InboxRow
-            item={{ ...item, unread: item.unread && !readIds.has(item.id) }}
-            onPress={() => markRead(item)}
-          />
-        )}
+        renderItem={({ item }) => <InboxRow item={item} onPress={() => openItem(item)} />}
         renderSectionHeader={({ section }) => (
-          <View className="bg-subtle px-4 py-2 dark:bg-d-subtle">
-            <Text className="text-xs font-semibold uppercase tracking-wider text-foreground-muted dark:text-d-fg-muted">
+          <View className="bg-background px-5 pb-1 pt-3 dark:bg-d-bg">
+            <Text className="text-xs font-semibold uppercase tracking-wider text-foreground-secondary dark:text-d-fg-secondary">
               {section.title}
             </Text>
           </View>
         )}
         ItemSeparatorComponent={() => (
-          <View className="mx-4 border-b border-border dark:border-d-border" />
+          <View className="mx-5 border-b border-border-light dark:border-d-border-light" />
         )}
-        stickySectionHeadersEnabled
-        contentContainerStyle={{ paddingBottom: 16 }}
+        ListEmptyComponent={
+          <EmptyState
+            icon="mail-open-outline"
+            title="Nothing here"
+            message="No items match this filter."
+          />
+        }
+        contentContainerStyle={{ paddingBottom: 120 }}
+        showsVerticalScrollIndicator={false}
       />
-    </SafeAreaView>
+    </Screen>
   )
 }

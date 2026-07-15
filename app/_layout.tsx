@@ -53,39 +53,14 @@ function RootContent() {
 
   return (
     <ThemeProvider value={navTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="modal"
-          options={{
-            presentation: "modal",
-            title: "Modal",
-            headerStyle: { backgroundColor: colors.surface },
-            headerTintColor: colors.foreground,
-          }}
-        />
-        <Stack.Screen
-          name="settings"
-          options={{
-            title: "Settings",
-            headerStyle: { backgroundColor: colors.background },
-            headerTintColor: colors.foreground,
-            headerTitleStyle: { fontFamily: "BricolageGrotesque_600SemiBold" },
-            headerBackTitle: "Back",
-            headerBackTitleStyle: { fontFamily: "BricolageGrotesque_600SemiBold", fontSize: 16 },
-          }}
-        />
-        <Stack.Screen
-          name="about"
-          options={{
-            title: "About",
-            headerStyle: { backgroundColor: colors.background },
-            headerTintColor: colors.foreground,
-            headerTitleStyle: { fontFamily: "BricolageGrotesque_600SemiBold" },
-            headerBackTitle: "More",
-            headerBackTitleStyle: { fontFamily: "BricolageGrotesque_600SemiBold", fontSize: 16 },
-          }}
-        />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: colors.background },
+        }}
+      >
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="transaction/[id]" options={{ presentation: "modal" }} />
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style={isDark ? "light" : "dark"} />

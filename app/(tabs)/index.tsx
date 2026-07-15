@@ -1,31 +1,52 @@
+import AccountsList from "@/components/home/accounts-list"
+import BalanceHero from "@/components/home/balance-hero"
+import CardCarousel from "@/components/home/card-carousel"
 import ExpenseAnalytics from "@/components/home/expense-analytics"
-import HomeOptions from "@/components/home/home-options"
-import Ionicons from "@expo/vector-icons/Ionicons"
-import { ScrollView, Text, View } from "react-native"
-import { SafeAreaView } from "react-native-safe-area-context"
+import QuickActions from "@/components/home/quick-actions"
+import RecentTransactions from "@/components/home/recent-transactions"
+import { Avatar } from "@/components/ui/Avatar"
+import { Screen } from "@/components/ui/Screen"
+import { ACCOUNT_HOLDER } from "@/store/useBankStore"
+import { useRouter } from "expo-router"
+import { Pressable, ScrollView, Text, View } from "react-native"
+
+function greeting(): string {
+  const h = new Date().getHours()
+  if (h < 12) return "Good morning"
+  if (h < 18) return "Good afternoon"
+  return "Good evening"
+}
 
 export default function HomeScreen() {
+  const router = useRouter()
+  const firstName = ACCOUNT_HOLDER.split(" ")[0]
+
   return (
-    <SafeAreaView className="flex-1 bg-background dark:bg-d-bg" edges={["top", "bottom"]}>
-      <View className="flex flex-row items-center justify-between px-6 py-4">
+    <Screen edges={["top"]}>
+      <View className="flex-row items-center justify-between px-5 pb-2 pt-1">
         <View>
-          <Text className="font-medium text-foreground dark:text-d-fg">Welcome back, Kebede!</Text>
-          <Text className="mt-1 text-sm text-foreground-secondary dark:text-d-fg-secondary">
-            How can I help you today?
+          <Text className="text-sm text-foreground-secondary dark:text-d-fg-secondary">
+            {greeting()},
           </Text>
+          <Text className="text-xl font-bold text-foreground dark:text-d-fg">{firstName}</Text>
         </View>
-        <View>
-          <Ionicons name="person-circle" size={40} color="#ff7c28" />
-        </View>
+        <Pressable onPress={() => router.push("/profile")} className="active:opacity-70">
+          <Avatar name={ACCOUNT_HOLDER} color="#ff7c28" size={42} />
+        </Pressable>
       </View>
+
       <ScrollView
         className="flex-1"
-        contentContainerClassName="gap-6 px-6 pb-16"
+        contentContainerClassName="gap-6 px-5 pb-28 pt-2"
         showsVerticalScrollIndicator={false}
       >
-        <HomeOptions />
+        <BalanceHero />
+        <QuickActions />
+        <AccountsList />
+        <CardCarousel />
+        <RecentTransactions />
         <ExpenseAnalytics />
       </ScrollView>
-    </SafeAreaView>
+    </Screen>
   )
 }

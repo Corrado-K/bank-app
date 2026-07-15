@@ -22,7 +22,7 @@ export default function TabLayout() {
         options={{
           title: "Home",
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? "home" : "home-outline"} size={18} color={color} />
+            <Ionicons name={focused ? "home" : "home-outline"} size={20} color={color} />
           ),
         }}
       />
@@ -32,28 +32,26 @@ export default function TabLayout() {
           title: "Inbox",
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
-              name={focused ? "file-tray-full" : "file-tray-full-outline"}
-              size={18}
+              name={focused ? "notifications" : "notifications-outline"}
+              size={20}
               color={color}
             />
           ),
         }}
       />
       <Tabs.Screen
-        name="finance"
+        name="pay"
         options={{
-          title: "Finance",
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? "cash" : "cash-outline"} size={18} color={color} />
-          ),
+          title: "Pay",
+          tabBarIcon: ({ color }) => <Ionicons name="swap-horizontal" size={26} color={color} />,
         }}
       />
       <Tabs.Screen
-        name="profile"
+        name="cards"
         options={{
-          title: "Profile",
+          title: "Cards",
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? "person" : "person-outline"} size={18} color={color} />
+            <Ionicons name={focused ? "card" : "card-outline"} size={20} color={color} />
           ),
         }}
       />
@@ -62,7 +60,7 @@ export default function TabLayout() {
         options={{
           title: "More",
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name="ellipsis-horizontal-circle-outline" size={18} color={color} />
+            <Ionicons name={focused ? "grid" : "grid-outline"} size={20} color={color} />
           ),
         }}
       />
